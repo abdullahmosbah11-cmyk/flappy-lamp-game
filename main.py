@@ -1,11 +1,12 @@
 # Imports
 import pygame
+import random
 from src.lamp import Lamp
 from src.obstacles import Obstacle
 from src.ui import UI
 from src.obstacles import Spark
 from src.lighting import LightingSystem
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TITLE, BG_COLOR, LAMP_X, LAMP_Y, STATE_PLAYING, STATE_GAME_OVER, MIN_LIGHT_RADIUS
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TITLE, BG_COLOR, LAMP_X, LAMP_Y, STATE_PLAYING, STATE_GAME_OVER, MIN_LIGHT_RADIUS, SPARK_RESTORE, MAX_LIGHT_RADIUS, PIPE_WIDTH, PIPE_GAP
 
 # Inits
 pygame.init()
@@ -26,6 +27,8 @@ spawn_timer = 0.0
 
 lighting = LightingSystem() 
 
+sparks = []
+
 running = True
 
 # Game loop
@@ -44,9 +47,6 @@ while running:
                 if game_state == STATE_PLAYING:
                     
                     lamp.flap()
-                    if lamp.light_radius <= MIN_LIGHT_RADIUS:
-                        death_reason = "Out of Oil & light!"
-                        game_state = STATE_GAME_OVER
 
                 elif game_state == STATE_GAME_OVER:
 
@@ -56,12 +56,36 @@ while running:
                     score = 0
                     game_state = STATE_PLAYING
 
+                    sparks.clear()
+                    obstacles.clear()
+
     if game_state == STATE_PLAYING:
         lamp.update(dt)
 
+        for spark in sparks:
+
+            spark.update(dt)
+
+            if not spark.collected and lamp.rect.colliderect(spark.rect):
+                spark.collected = True
+                lamp.light_radius = min(MAX_LIGHT_RADIUS, lamp.light_radius + SPARK_RESTORE)
+        
+        sparks = [s for s in sparks if not s.is_off_screen() and not s.collected]
+
+        if lamp.light_radius <= MIN_LIGHT_RADIUS:
+            death_reason = "Out of Oil & light!"
+            game_state = STATE_GAME_OVER
+
         spawn_timer += dt
         if spawn_timer >= 1.6:
-            obstacles.append(Obstacle(SCREEN_WIDTH + 20))
+            new_obs = Obstacle(SCREEN_WIDTH + 20)
+            obstacles.append(new_obs)
+            gap_top = new_obs.top_rect.height
+            safe_min_y = gap_top + 25
+            safe_max_y = gap_top + PIPE_GAP - 25
+            spark_x = SCREEN_WIDTH + 20 + 170
+            spark_y = random.randint(safe_min_y, safe_max_y)
+            sparks.append(Spark(spark_x, spark_y))
             spawn_timer = 0.0
 
         for obs in obstacles:
@@ -82,7 +106,7 @@ while running:
 
     
 
-        if lamp.rect.bottom >= SCREEN_HEIGHT:
+        if lamp.rect.bottom >= SCREEN_HEIGHT or lamp.rect.top <= 0:
             death_reason = "Fell into the Dark!"
             game_state = STATE_GAME_OVER
 
@@ -96,7 +120,12 @@ while running:
     for obs in obstacles:
         obs.draw(screen)
 
+    for spark in sparks:
+        spark.draw(screen)
+
     lamp.draw(screen)
+
+    
 
     lighting.draw_light_mask(screen, lamp.rect.center, lamp.light_radius)
 

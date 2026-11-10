@@ -27,9 +27,9 @@ class Obstacle:
         return self.top_rect.right < 0 
         
 class Spark:
-    def __init__(self, x, gap_y, pipe_gap):
+    def __init__(self, x, y):
         self.x = float(x)
-        self.y = float(gap_y + pipe_gap // 2)
+        self.y = float(y)
         self.rect = pygame.Rect(int(self.x), int(self.y), SPARK_SIZE, SPARK_SIZE)
         self.collected = False
     def update(self, dt):
