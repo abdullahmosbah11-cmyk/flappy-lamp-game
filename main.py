@@ -98,14 +98,18 @@ while running:
                     obs.passed = True 
                     score += 1
                 obs.update(dt)
-        
-                if lamp.rect.colliderect(obs.top_rect):
+
+                offest_top = (obs.top_rect.x - lamp.rect.x, obs.top_rect.y - lamp.rect.y)
+                offest_bottom = (obs.bottom_rect.x - lamp.rect.x, obs.bottom_rect.y - lamp.rect.y)
+
+                if lamp.mask.overlap(obs.mask_top, offest_top):
                     death_reason = "Shattered by Stone!"
                     game_state = STATE_GAME_OVER
-        
-                if lamp.rect.colliderect(obs.bottom_rect):
+                elif lamp.mask.overlap(obs.mask_bottom, offest_bottom):
                     death_reason = "Electrocuted by Iron!"
                     game_state = STATE_GAME_OVER
+        
+               
         
 
     

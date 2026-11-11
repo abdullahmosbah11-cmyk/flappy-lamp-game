@@ -42,3 +42,8 @@ BG_LAYER1_PATH = "assets/sprites/bg_layer1.png"
 BG_LAYER2_PATH = "assets/sprites/bg_layer2.png"
 BG_LAYER1_SPEED = 25.0 
 BG_LAYER2_SPEED = 70.0
+
+STONE_PATH = "assets/sprites/stone_top.png"
+IRON_PATH = "assets/sprites/iron_bottom.png"
+SPARK_PATH = "assets/sprites/spark.png"
+LAMP_PATH = "assets/sprites/lamp.png"

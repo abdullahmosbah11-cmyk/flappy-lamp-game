@@ -16,7 +16,7 @@ def load_sprite(relative_path, size=None):
 
 def load_sprite_strip(relative_path, frame_w, frame_h, size=None):
     sheet = load_sprite(relative_path)
-    sheet_w, _ = sheet.get_size
+    sheet_w, _ = sheet.get_size()
     frames = []
     for x in range (0, sheet_w, frame_w):
         frame = pygame.Surface((frame_w, frame_h), pygame.SRCALPHA).convert_alpha()

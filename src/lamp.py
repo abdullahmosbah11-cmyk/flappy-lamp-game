@@ -1,14 +1,20 @@
 import pygame 
-from src.settings import    GRAVITY, FLAP_SPEED, MAX_FALL_SPEED, LAMP_COLOR, MAX_LIGHT_RADIUS, MIN_LIGHT_RADIUS, FUEL_DRAIN_RATE
+from src.assets import load_sprite_strip
+from src.settings import    GRAVITY, FLAP_SPEED, MAX_FALL_SPEED, LAMP_COLOR, MAX_LIGHT_RADIUS, MIN_LIGHT_RADIUS, FUEL_DRAIN_RATE, LAMP_PATH
 
 class Lamp:
     def __init__(self, x, y):
-        self.image = pygame.Surface((36, 36))
-        self.image.fill(LAMP_COLOR)
+        self.frames = load_sprite_strip(LAMP_PATH, 32, 32)
+        self.frame_index = 0.0
+
+        self.image = self.frames[0]
+        self.rect = self.image.get_rect(center=(int(x), int(y)))
+
+        self.mask = pygame.mask.from_surface(self.image)
+
         self.x = float(x)
         self.y = float(y)
         self.vel_y = 0.0
-        self.rect = self.image.get_rect(center=(int(self.x), int(self.y)))
         self.light_radius = float(MAX_LIGHT_RADIUS)
     
 
@@ -20,6 +26,15 @@ class Lamp:
         self.y += self.vel_y * dt
         self.rect.centery = int(self.y)
         self.light_radius = max(MIN_LIGHT_RADIUS, self.light_radius - FUEL_DRAIN_RATE * dt)
+
+        self.frame_index += 8.0 * dt
+
+        if self.frame_index >= len(self.frames):
+            self.frame_index = 0
+
+        self.image = self.frames[int(self.frame_index)]
+        self.mask = pygame.mask.from_surface(self.image)
+    
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
