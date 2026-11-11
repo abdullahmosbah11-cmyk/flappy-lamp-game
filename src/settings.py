@@ -37,3 +37,8 @@ DARKNESS_ALPHA = 240
 SPARK_COLOR = (255, 230, 90)
 SPARK_SIZE = 12 
 SPARK_RESTORE = 50.0
+
+BG_LAYER1_PATH = "assets/sprites/bg_layer1.png"
+BG_LAYER2_PATH = "assets/sprites/bg_layer2.png"
+BG_LAYER1_SPEED = 25.0 
+BG_LAYER2_SPEED = 70.0

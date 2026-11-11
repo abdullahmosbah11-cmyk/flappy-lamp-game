@@ -6,6 +6,7 @@ from src.obstacles import Obstacle
 from src.ui import UI
 from src.obstacles import Spark
 from src.lighting import LightingSystem
+from src.background import ParallaxBackground
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TITLE, BG_COLOR, LAMP_X, LAMP_Y, STATE_PLAYING, STATE_GAME_OVER, MIN_LIGHT_RADIUS, SPARK_RESTORE, MAX_LIGHT_RADIUS, PIPE_WIDTH, PIPE_GAP
 
 # Inits
@@ -28,6 +29,8 @@ spawn_timer = 0.0
 lighting = LightingSystem() 
 
 sparks = []
+
+bg = ParallaxBackground()
 
 running = True
 
@@ -61,6 +64,7 @@ while running:
 
     if game_state == STATE_PLAYING:
         lamp.update(dt)
+        bg.update(dt)
 
         for spark in sparks:
 
@@ -110,12 +114,14 @@ while running:
             death_reason = "Fell into the Dark!"
             game_state = STATE_GAME_OVER
 
-            obstacles = [obs for obs in obstacles if not obs.is_off_screen()]
+        obstacles = [obs for obs in obstacles if not obs.is_off_screen()]
  
 
 
 
     screen.fill(BG_COLOR)
+
+    bg.draw(screen)
 
     for obs in obstacles:
         obs.draw(screen)
