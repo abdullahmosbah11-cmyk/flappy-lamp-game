@@ -47,3 +47,8 @@ STONE_PATH = "assets/sprites/stone_top.png"
 IRON_PATH = "assets/sprites/iron_bottom.png"
 SPARK_PATH = "assets/sprites/spark.png"
 LAMP_PATH = "assets/sprites/lamp.png"
+
+ROTATION_SPEED = 180.0
+FLAP_ANGLE = 25.0
+MAX_DROP_ANGLE = -65.0
+
