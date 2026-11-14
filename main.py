@@ -10,7 +10,7 @@ from src.background import ParallaxBackground
 from src.save_manager import SaveManager
 from src.particles import EmberParticle
 from src.sound_manager import SoundManager
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TITLE, BG_COLOR, LAMP_X, LAMP_Y, STATE_PLAYING, STATE_GAME_OVER, MIN_LIGHT_RADIUS, SPARK_RESTORE, MAX_LIGHT_RADIUS, PIPE_WIDTH, PIPE_GAP, STATE_MENU, STATE_SHOP, FLAME_THEMES
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TITLE, BG_COLOR, LAMP_X, LAMP_Y, STATE_PLAYING, STATE_GAME_OVER, MIN_LIGHT_RADIUS, SPARK_RESTORE, MAX_LIGHT_RADIUS, PIPE_WIDTH, PIPE_GAP, STATE_MENU, STATE_SHOP, FLAME_THEMES, SCROLL_SPEED
 
 # Inits
 pygame.mixer.pre_init(44100, -16, 2, 512)
@@ -33,7 +33,7 @@ session_sparks = 0
 spark_combo = 0
 
 spawn_timer = 0.0
-
+pipes_spawned = 0
 particles = []
 particle_timer = 0.0
 shake_timer = 0.0
@@ -55,6 +55,13 @@ def get_active_theme():
             return item
 
     return FLAME_THEMES["1"]
+
+def get_difficulty(current_score):
+    level = current_score // 5
+    speed = min(SCROLL_SPEED + 130, SCROLL_SPEED + level * 14)
+    gap = max(PIPE_GAP - 36, PIPE_GAP - level * 3)
+    spawn_interval = 1.6 * (SCROLL_SPEED / speed)
+    return speed, gap, spawn_interval
 
 lamp.set_theme(get_active_theme()["path"])
 
@@ -98,6 +105,7 @@ while running:
                         lamp.set_theme(get_active_theme()["path"])
                         obstacles.clear()
                         spawn_timer = 0.0
+                        pipes_spawned = 0
                         score = 0
                         game_state = STATE_PLAYING
                         session_sparks = 0
@@ -113,6 +121,7 @@ while running:
 
                         obstacles.clear()
                         spawn_timer = 0.0
+                        pipes_spawned = 0
                         score = 0
                         game_state = STATE_MENU
                         session_sparks = 0
@@ -162,6 +171,7 @@ while running:
 
     if game_state == STATE_PLAYING:
         lamp.update(dt)
+        current_speed, current_gap, current_spawn_interval = get_difficulty(score)
 
         particle_timer += dt
         if particle_timer >= 0.04:
@@ -177,7 +187,7 @@ while running:
 
         for spark in sparks:
 
-            spark.update(dt)
+            spark.update(dt, current_speed)
 
             if not spark.collected and lamp.rect.colliderect(spark.rect):
                 spark.collected = True
@@ -210,16 +220,29 @@ while running:
             session_sparks = 0
 
         spawn_timer += dt
-        if spawn_timer >= 1.6:
-            new_obs = Obstacle(SCREEN_WIDTH + 20)
+        if spawn_timer >= current_spawn_interval:
+            pipes_spawned += 1
+            is_moving = False
+            move_speed = 0.0
+
+            if pipes_spawned > 20:
+                move_chance = 0.6 if pipes_spawned <= 35 else 0.85
+                if random.random() < move_chance:
+                    is_moving = True
+                    move_speed = random.uniform(65.0, 95.0)
+
+            new_obs = Obstacle(SCREEN_WIDTH + 20, gap=current_gap, is_moving=is_moving, move_speed=move_speed)
             obstacles.append(new_obs)
-            gap_top = new_obs.top_rect.height
+
+            gap_top = new_obs.top_rect.bottom
             safe_min_y = gap_top + 25
-            safe_max_y = gap_top + PIPE_GAP - 25
+            safe_max_y = gap_top + current_gap - 25
             spark_x = SCREEN_WIDTH + 20 + 170
             spark_y = random.randint(safe_min_y, safe_max_y)
             sparks.append(Spark(spark_x, spark_y))
             spawn_timer = 0.0
+
+            
 
         for obs in obstacles:
         
@@ -227,7 +250,7 @@ while running:
                     obs.passed = True 
                     score += 1
                     sound_mgr.play("score")
-                obs.update(dt)
+                obs.update(dt, current_speed)
 
                 offest_top = (obs.top_rect.x - lamp.rect.x, obs.top_rect.y - lamp.rect.y)
                 offest_bottom = (obs.bottom_rect.x - lamp.rect.x, obs.bottom_rect.y - lamp.rect.y)
