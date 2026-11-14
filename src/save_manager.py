@@ -1,9 +1,15 @@
 import json
 import os
+import sys
 
 class SaveManager:
     def __init__(self, filename="save_data.json"):
-        self.filename = filename
+        if getattr(sys, "frozen", False):
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            base_dir = os.path.abspath(".")
+        self.filename = os.path.join(base_dir, filename)
+        
         self.data = self.load()
 
     
