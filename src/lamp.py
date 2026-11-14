@@ -24,6 +24,13 @@ class Lamp:
         self.vel_y = FLAP_SPEED
         self.angle = FLAP_ANGLE
 
+    def set_theme(self, sprite_path):
+        self.frames = load_sprite_strip(sprite_path, 32, 32)
+        base_image = self.frames[int(self.frame_index)]
+        self.image = pygame.transform.rotate(base_image, self.angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
+        self.mask = pygame.mask.from_surface(self.image)
+
     def update(self, dt):
         self.vel_y = min(MAX_FALL_SPEED, self.vel_y + GRAVITY * dt)
         self.y += self.vel_y * dt

@@ -52,3 +52,14 @@ ROTATION_SPEED = 180.0
 FLAP_ANGLE = 25.0
 MAX_DROP_ANGLE = -65.0
 
+STATE_MENU = 0 
+STATE_PLAYING = 1 
+STATE_GAME_OVER = 2 
+STATE_SHOP = 3
+GOLD_COLOR = (255, 215, 0)
+
+FLAME_THEMES = {
+    "1": {"id": "amber", "name": "Classic Amber", "cost": 0, "color": (255, 200, 65), "path": "assets/sprites/lamp.png"},
+    "2": {"id": "azura", "name": "Azura Flame", "cost": 15, "color": (70, 195, 255), "path": "assets/sprites/lamp_azure.png"},
+    "3": {"id": "emerald", "name": "Emerald Glow", "cost": 35, "color": (80, 235, 135), "path": "assets/sprites/lamp_emerald.png"},
+}

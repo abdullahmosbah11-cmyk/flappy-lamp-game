@@ -6,7 +6,7 @@ class LightingSystem:
     def __init__(self):
         self.darkness = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    def draw_light_mask(self, target_surf, lamp_center, radius):
+    def draw_light_mask(self, target_surf, lamp_center, radius, light_color=(255, 240, 190)):
               
        fuel_ratio = max(0.0, min(1.0, radius / MAX_LIGHT_RADIUS))
        
@@ -14,7 +14,6 @@ class LightingSystem:
        dark_g = int(20 * fuel_ratio)
        dark_b = int(45 * fuel_ratio)
        dark_color = (dark_r, dark_g, dark_b)
-       light_color = (255, 240, 190)
 
        self.darkness.fill(dark_color)
 
