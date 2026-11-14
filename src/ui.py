@@ -11,6 +11,15 @@ class UI:
         score_rect = score_surf.get_rect(center=(SCREEN_WIDTH // 2, 45))
         screen.blit(score_surf, score_rect)
 
+    def draw_combo(self, surface, combo, color):
+        if combo >= 2:
+            font = pygame.font.SysFont("consolas", 22, bold=True)
+            bonus = combo // 2
+            label = f"COMBO x{combo}! (+{bonus} Score)"
+            text_surf = font.render(label, True, color)
+            text_rect = text_surf.get_rect(center=(surface.get_width() // 2, 72))
+            surface.blit(text_surf, text_rect)
+
     def draw_game_over(self, screen, death_reason, score):
         reason_surf = self.text_font.render(death_reason, True, DANGER_COLOR)
         reason_rect = reason_surf.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 20))

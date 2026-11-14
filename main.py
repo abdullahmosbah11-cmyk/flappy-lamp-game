@@ -30,6 +30,7 @@ game_state = STATE_MENU
 score = 0
 death_reason = ""
 session_sparks = 0
+spark_combo = 0
 
 spawn_timer = 0.0
 
@@ -100,6 +101,8 @@ while running:
                         score = 0
                         game_state = STATE_PLAYING
                         session_sparks = 0
+                        spark_combo = 0
+
                         sparks.clear()
                         particles.clear()
                         obstacles.clear()
@@ -113,6 +116,8 @@ while running:
                         score = 0
                         game_state = STATE_MENU
                         session_sparks = 0
+                        spark_combo = 0
+
                         sparks.clear()
                         particles.clear()
                         obstacles.clear()
@@ -176,9 +181,20 @@ while running:
 
             if not spark.collected and lamp.rect.colliderect(spark.rect):
                 spark.collected = True
-                lamp.light_radius = min(MAX_LIGHT_RADIUS, lamp.light_radius + SPARK_RESTORE)
+                spark_combo += 1
+                bonus_score = spark_combo // 2
+                score += bonus_score
+                extra_light = min(20, (spark_combo - 1) * 3)
+                lamp.light_radius = min(MAX_LIGHT_RADIUS, lamp.light_radius + SPARK_RESTORE + extra_light)
                 session_sparks += 1
                 sound_mgr.play("spark")
+           
+            elif not spark.collected and not getattr(spark, "missed", False):
+
+                if spark.rect.right < lamp.rect.left or spark.is_off_screen():
+                    spark.missed = True
+                    spark_combo = 0
+
         
         sparks = [s for s in sparks if not s.is_off_screen() and not s.collected]
 
@@ -187,7 +203,8 @@ while running:
             sound_mgr.play("crash")
             game_state = STATE_GAME_OVER
             shake_timer = 0.25
-            
+            spark_combo = 0
+
             save_mgr.update_high_score(score)
             save_mgr.add_sparks(session_sparks)
             session_sparks = 0
@@ -224,12 +241,14 @@ while running:
                     save_mgr.update_high_score(score)
                     save_mgr.add_sparks(session_sparks)
                     session_sparks = 0
+                    spark_combo = 0
 
                 elif lamp.mask.overlap(obs.mask_bottom, offest_bottom):
                     death_reason = "Electrocuted by Iron!"
                     sound_mgr.play("zap")
                     game_state = STATE_GAME_OVER
                     shake_timer = 0.25
+                    spark_combo = 0
 
                     save_mgr.update_high_score(score)
                     save_mgr.add_sparks(session_sparks)
@@ -245,6 +264,7 @@ while running:
             sound_mgr.play("crash")
             game_state = STATE_GAME_OVER
             shake_timer = 0.25
+            spark_combo = 0
 
             save_mgr.update_high_score(score)
             save_mgr.add_sparks(session_sparks)
@@ -284,6 +304,7 @@ while running:
         lighting.draw_light_mask(screen, lamp.rect.center, lamp.light_radius, get_active_theme()["color"])
         
         ui.draw_score(screen, score)
+        ui.draw_combo(screen, spark_combo, get_active_theme()["color"])
 
 
     
