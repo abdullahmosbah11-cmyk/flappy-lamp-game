@@ -8,12 +8,15 @@ from src.obstacles import Spark
 from src.lighting import LightingSystem
 from src.background import ParallaxBackground
 from src.save_manager import SaveManager
+from src.particles import EmberParticle
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TITLE, BG_COLOR, LAMP_X, LAMP_Y, STATE_PLAYING, STATE_GAME_OVER, MIN_LIGHT_RADIUS, SPARK_RESTORE, MAX_LIGHT_RADIUS, PIPE_WIDTH, PIPE_GAP, STATE_MENU, STATE_SHOP, FLAME_THEMES
 
 # Inits
 pygame.init()
 
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+
 pygame.display.set_caption(TITLE)
 clock = pygame.time.Clock()
 
@@ -27,6 +30,10 @@ death_reason = ""
 session_sparks = 0
 
 spawn_timer = 0.0
+
+particles = []
+particle_timer = 0.0
+shake_timer = 0.0
 
 lighting = LightingSystem() 
 
@@ -46,6 +53,8 @@ def get_active_theme():
     return FLAME_THEMES["1"]
 
 lamp.set_theme(get_active_theme()["path"])
+
+
 
 running = True
 
@@ -87,6 +96,7 @@ while running:
                         game_state = STATE_PLAYING
                         session_sparks = 0
                         sparks.clear()
+                        particles.clear()
                         obstacles.clear()
 
                     if event.key == pygame.K_m:
@@ -99,6 +109,7 @@ while running:
                         game_state = STATE_MENU
                         session_sparks = 0
                         sparks.clear()
+                        particles.clear()
                         obstacles.clear()
 
             elif game_state == STATE_SHOP:
@@ -140,6 +151,17 @@ while running:
 
     if game_state == STATE_PLAYING:
         lamp.update(dt)
+
+        particle_timer += dt
+        if particle_timer >= 0.04:
+            flame_color = get_active_theme()["color"]
+            particles.append(EmberParticle(lamp.rect.left + 6, lamp.rect.centery, flame_color))
+            particle_timer = 0.0
+
+        for p in particles:
+            p.update(dt)
+
+        particles = [p for p in particles if p.lifetime > 0]
         
 
         for spark in sparks:
@@ -156,6 +178,7 @@ while running:
         if lamp.light_radius <= MIN_LIGHT_RADIUS:
             death_reason = "Out of Oil & light!"
             game_state = STATE_GAME_OVER
+            shake_timer = 0.25
             
             save_mgr.update_high_score(score)
             save_mgr.add_sparks(session_sparks)
@@ -186,6 +209,7 @@ while running:
                 if lamp.mask.overlap(obs.mask_top, offest_top):
                     death_reason = "Shattered by Stone!"
                     game_state = STATE_GAME_OVER
+                    shake_timer = 0.25
 
                     save_mgr.update_high_score(score)
                     save_mgr.add_sparks(session_sparks)
@@ -194,6 +218,7 @@ while running:
                 elif lamp.mask.overlap(obs.mask_bottom, offest_bottom):
                     death_reason = "Electrocuted by Iron!"
                     game_state = STATE_GAME_OVER
+                    shake_timer = 0.25
 
                     save_mgr.update_high_score(score)
                     save_mgr.add_sparks(session_sparks)
@@ -207,6 +232,7 @@ while running:
         if lamp.rect.bottom >= SCREEN_HEIGHT or lamp.rect.top <= 0:
             death_reason = "Fell into the Dark!"
             game_state = STATE_GAME_OVER
+            shake_timer = 0.25
 
             save_mgr.update_high_score(score)
             save_mgr.add_sparks(session_sparks)
@@ -235,6 +261,9 @@ while running:
         
         for spark in sparks:
             spark.draw(screen)
+
+        for p in particles:
+            p.draw(screen)
         
         lamp.draw(screen)
         
@@ -251,6 +280,14 @@ while running:
         ui.draw_game_over(screen, death_reason, score)
 
     
+    offset_x, offset_y = 0, 0
+    if shake_timer > 0:
+        shake_timer -= dt
+        offset_x = random.randint(-6, 6)
+        offset_y = random.randint(-6, 6)
+
+    window.fill((0, 0, 0))
+    window.blit(screen, (offset_x, offset_y))
     pygame.display.flip()
 
 pygame.quit()
