@@ -9,9 +9,11 @@ from src.lighting import LightingSystem
 from src.background import ParallaxBackground
 from src.save_manager import SaveManager
 from src.particles import EmberParticle
+from src.sound_manager import SoundManager
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TITLE, BG_COLOR, LAMP_X, LAMP_Y, STATE_PLAYING, STATE_GAME_OVER, MIN_LIGHT_RADIUS, SPARK_RESTORE, MAX_LIGHT_RADIUS, PIPE_WIDTH, PIPE_GAP, STATE_MENU, STATE_SHOP, FLAME_THEMES
 
 # Inits
+pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.init()
 
 window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -42,6 +44,7 @@ sparks = []
 bg = ParallaxBackground()
 
 save_mgr = SaveManager()
+sound_mgr = SoundManager()
 
 def get_active_theme():
     selected_id = save_mgr.data.get("selected_flame", "amber")
@@ -74,6 +77,7 @@ while running:
                 if event.key == pygame.K_SPACE:
                     game_state = STATE_PLAYING
                     lamp.flap()
+                    sound_mgr.play("flap")
                 
                 elif event.key == pygame.K_s:
                     game_state = STATE_SHOP
@@ -84,6 +88,7 @@ while running:
                     if game_state == STATE_PLAYING:
                                     
                         lamp.flap()
+                        sound_mgr.play("flap")
 
             
             elif game_state == STATE_GAME_OVER:
@@ -140,6 +145,7 @@ while running:
                         save_mgr.unlock_flame(theme_id, theme["cost"])
 
                     lamp.set_theme(get_active_theme()["path"])
+                    sound_mgr.play("buy")
 
 
             
@@ -172,11 +178,13 @@ while running:
                 spark.collected = True
                 lamp.light_radius = min(MAX_LIGHT_RADIUS, lamp.light_radius + SPARK_RESTORE)
                 session_sparks += 1
+                sound_mgr.play("spark")
         
         sparks = [s for s in sparks if not s.is_off_screen() and not s.collected]
 
         if lamp.light_radius <= MIN_LIGHT_RADIUS:
             death_reason = "Out of Oil & light!"
+            sound_mgr.play("crash")
             game_state = STATE_GAME_OVER
             shake_timer = 0.25
             
@@ -201,6 +209,7 @@ while running:
                 if not obs.passed and obs.top_rect.right < lamp.rect.left:
                     obs.passed = True 
                     score += 1
+                    sound_mgr.play("score")
                 obs.update(dt)
 
                 offest_top = (obs.top_rect.x - lamp.rect.x, obs.top_rect.y - lamp.rect.y)
@@ -208,6 +217,7 @@ while running:
 
                 if lamp.mask.overlap(obs.mask_top, offest_top):
                     death_reason = "Shattered by Stone!"
+                    sound_mgr.play("crash")
                     game_state = STATE_GAME_OVER
                     shake_timer = 0.25
 
@@ -217,6 +227,7 @@ while running:
 
                 elif lamp.mask.overlap(obs.mask_bottom, offest_bottom):
                     death_reason = "Electrocuted by Iron!"
+                    sound_mgr.play("zap")
                     game_state = STATE_GAME_OVER
                     shake_timer = 0.25
 
@@ -231,6 +242,7 @@ while running:
 
         if lamp.rect.bottom >= SCREEN_HEIGHT or lamp.rect.top <= 0:
             death_reason = "Fell into the Dark!"
+            sound_mgr.play("crash")
             game_state = STATE_GAME_OVER
             shake_timer = 0.25
 
@@ -252,7 +264,7 @@ while running:
 
     elif game_state == STATE_SHOP:
         ui.draw_shop(screen, save_mgr.data.get("total_sparks", 0), 
-                     save_mgr.data.get("unlocked_flames", ["amner"]),
+                     save_mgr.data.get("unlocked_flames", ["amber"]),
                      save_mgr.data.get("selected_flame", "amber"))
     
     elif game_state in (STATE_PLAYING, STATE_GAME_OVER):
